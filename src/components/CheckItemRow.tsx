@@ -13,7 +13,6 @@ interface CheckItemRowProps {
 
 
 export function CheckItemRow({ item, onUpdate }: CheckItemRowProps) {
-  const [expanded, setExpanded] = useState(false);
   const [notes, setNotes] = useState(item.notes);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
@@ -129,17 +128,23 @@ export function CheckItemRow({ item, onUpdate }: CheckItemRowProps) {
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="w-full text-left"
-            >
+            <div className="w-full text-left">
               <div className="flex items-start gap-1">
                 <span className="text-xs font-mono text-gray-400 flex-shrink-0">{item.ref}</span>
                 {item.priority && <span className="text-orange text-xs">⚑</span>}
                 {photos.length > 0 && <span className="text-xs text-gray-400">📷{photos.length}</span>}
               </div>
               <p className="text-sm text-dark-grey mt-0.5 leading-snug">{item.text}</p>
-            </button>
+            </div>
+
+            {/* Notes - always visible */}
+            <textarea
+              value={notes}
+              onChange={(e) => handleNotesChange(e.target.value)}
+              placeholder="Add notes / comments..."
+              rows={2}
+              className="w-full mt-2 px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-orange"
+            />
 
             {/* Always-visible action bar */}
             <div className="flex items-center gap-2 mt-2">
@@ -165,12 +170,6 @@ export function CheckItemRow({ item, onUpdate }: CheckItemRowProps) {
                 />
               </label>
               <button
-                onClick={() => setExpanded(!expanded)}
-                className="flex items-center gap-1 px-3 py-1.5 bg-navy/10 text-navy rounded-lg text-xs font-medium"
-              >
-                📝 Notes {expanded ? '▲' : '▼'}
-              </button>
-              <button
                 onClick={togglePriority}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
                   item.priority
@@ -182,28 +181,9 @@ export function CheckItemRow({ item, onUpdate }: CheckItemRowProps) {
               </button>
             </div>
 
-            {/* Notes preview when collapsed */}
-            {item.notes && !expanded && (
-              <p className="text-xs text-gray-400 mt-1 truncate">📝 {item.notes}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Expanded notes & photos section */}
-        {expanded && (
-          <div className="px-3 pb-3 space-y-2 ml-14">
-            {/* Notes */}
-            <textarea
-              value={notes}
-              onChange={(e) => handleNotesChange(e.target.value)}
-              placeholder="Add notes..."
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-orange"
-            />
-
             {/* Photo thumbnails */}
             {photos.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              <div className="flex gap-2 overflow-x-auto pb-1 mt-2">
                 {photos.map((photo) => (
                   <div key={photo.id} className="relative flex-shrink-0">
                     <button
@@ -230,7 +210,7 @@ export function CheckItemRow({ item, onUpdate }: CheckItemRowProps) {
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Lightbox */}
