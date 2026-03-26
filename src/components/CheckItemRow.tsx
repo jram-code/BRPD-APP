@@ -128,37 +128,70 @@ export function CheckItemRow({ item, onUpdate }: CheckItemRowProps) {
           </div>
 
           {/* Content */}
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex-1 text-left min-w-0"
-          >
-            <div className="flex items-start gap-1">
-              <span className="text-xs font-mono text-gray-400 flex-shrink-0">{item.ref}</span>
-              {item.priority && <span className="text-orange text-xs">⚑</span>}
-              {photos.length > 0 && <span className="text-xs text-gray-400">📷{photos.length}</span>}
+          <div className="flex-1 min-w-0">
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="w-full text-left"
+            >
+              <div className="flex items-start gap-1">
+                <span className="text-xs font-mono text-gray-400 flex-shrink-0">{item.ref}</span>
+                {item.priority && <span className="text-orange text-xs">⚑</span>}
+                {photos.length > 0 && <span className="text-xs text-gray-400">📷{photos.length}</span>}
+              </div>
+              <p className="text-sm text-dark-grey mt-0.5 leading-snug">{item.text}</p>
+            </button>
+
+            {/* Always-visible action bar */}
+            <div className="flex items-center gap-2 mt-2">
+              <label className="flex items-center gap-1 px-3 py-1.5 bg-navy/10 text-navy rounded-lg text-xs font-medium cursor-pointer">
+                📷 Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handlePhotoCapture}
+                />
+              </label>
+              <label className="flex items-center gap-1 px-3 py-1.5 bg-navy/10 text-navy rounded-lg text-xs font-medium cursor-pointer">
+                🖼️ Gallery
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handlePhotoCapture}
+                />
+              </label>
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-navy/10 text-navy rounded-lg text-xs font-medium"
+              >
+                📝 Notes {expanded ? '▲' : '▼'}
+              </button>
+              <button
+                onClick={togglePriority}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                  item.priority
+                    ? 'bg-orange text-white'
+                    : 'bg-navy/10 text-navy'
+                }`}
+              >
+                {item.priority ? '⚑ Priority' : '⚐ Flag'}
+              </button>
             </div>
-            <p className="text-sm text-dark-grey mt-0.5 leading-snug">{item.text}</p>
+
+            {/* Notes preview when collapsed */}
             {item.notes && !expanded && (
               <p className="text-xs text-gray-400 mt-1 truncate">📝 {item.notes}</p>
             )}
-          </button>
+          </div>
         </div>
 
-        {/* Expanded section */}
+        {/* Expanded notes & photos section */}
         {expanded && (
-          <div className="px-3 pb-3 space-y-2">
-            {/* Priority toggle */}
-            <button
-              onClick={togglePriority}
-              className={`tap-target text-xs px-3 py-1.5 rounded-full ${
-                item.priority
-                  ? 'bg-orange text-white'
-                  : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              {item.priority ? '⚑ Priority' : '⚐ Mark Priority'}
-            </button>
-
+          <div className="px-3 pb-3 space-y-2 ml-14">
             {/* Notes */}
             <textarea
               value={notes}
@@ -196,31 +229,6 @@ export function CheckItemRow({ item, onUpdate }: CheckItemRowProps) {
                 ))}
               </div>
             )}
-
-            {/* Photo capture */}
-            <div className="flex gap-2">
-              <label className="tap-target flex-1 text-center bg-gray-100 text-gray-700 py-2 rounded-lg text-sm cursor-pointer">
-                📷 Camera
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={handlePhotoCapture}
-                />
-              </label>
-              <label className="tap-target flex-1 text-center bg-gray-100 text-gray-700 py-2 rounded-lg text-sm cursor-pointer">
-                🖼️ Gallery
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handlePhotoCapture}
-                />
-              </label>
-            </div>
           </div>
         )}
       </div>
