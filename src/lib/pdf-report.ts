@@ -9,6 +9,15 @@ const DARK_GREY = '#333333';
 const LIGHT_GREEN = '#dcfce7';
 const LIGHT_RED = '#fee2e2';
 const LIGHT_GREY = '#f3f4f6';
+function formatStatus(status: string): string {
+  switch (status) {
+    case 'pass': return 'PASS';
+    case 'fail': return 'FAIL';
+    case 'na': return 'N/A';
+    case 'outstanding': return 'OUTSTANDING';
+    default: return status.toUpperCase();
+  }
+}
 
 interface ReportData {
   project: Project;
@@ -167,6 +176,70 @@ export async function generateReport(data: ReportData): Promise<jsPDF> {
     });
   }
 
+  // Outstanding items summary
+  const outstandingItems = items.filter((i) => i.status === 'outstanding');
+  if (outstandingItems.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    y = (doc as any).lastAutoTable.finalY + 15;
+
+    if (y > pageHeight - 40) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setFontSize(12);
+    doc.setTextColor(ORANGE);
+    doc.text('Outstanding Items', margin, y);
+    y += 6;
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Ref', 'Item', 'Notes']],
+      body: outstandingItems.map((i) => [i.ref, i.text, i.notes || '']),
+      theme: 'grid',
+      headStyles: { fillColor: ORANGE, fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: contentWidth * 0.45 },
+        2: { cellWidth: contentWidth * 0.35 },
+      },
+      margin: { left: margin, right: margin },
+    });
+  }
+
+  // N/A items summary
+  const naItems = items.filter((i) => i.status === 'na');
+  if (naItems.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    y = (doc as any).lastAutoTable.finalY + 15;
+
+    if (y > pageHeight - 40) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setFontSize(12);
+    doc.setTextColor('#6b7280');
+    doc.text('Not Applicable Items', margin, y);
+    y += 6;
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Ref', 'Item', 'Notes']],
+      body: naItems.map((i) => [i.ref, i.text, i.notes || '']),
+      theme: 'grid',
+      headStyles: { fillColor: '#6b7280', fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: contentWidth * 0.45 },
+        2: { cellWidth: contentWidth * 0.35 },
+      },
+      margin: { left: margin, right: margin },
+    });
+  }
+
   // ===== FULL CHECKLIST =====
   // Group items by section using the sections config
   const allSectionKeys = [
@@ -194,7 +267,7 @@ export async function generateReport(data: ReportData): Promise<jsPDF> {
       body: sectionItems.map((i) => [
         i.ref,
         i.text,
-        i.status.toUpperCase(),
+        formatStatus(i.status),
         i.notes || '',
       ]),
       theme: 'grid',
@@ -214,7 +287,7 @@ export async function generateReport(data: ReportData): Promise<jsPDF> {
             data.cell.styles.fillColor = LIGHT_GREEN;
           } else if (status === 'fail') {
             data.cell.styles.fillColor = LIGHT_RED;
-          } else if (status === 'n/a') {
+          } else if (status === 'n/a' || status === 'na') {
             data.cell.styles.fillColor = LIGHT_GREY;
           }
         }
