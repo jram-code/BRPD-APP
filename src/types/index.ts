@@ -48,6 +48,7 @@ export interface Inspection {
   siteContact: string;
   weather: string;
   notes: string;
+  title?: string;
   nextVisitDate: string;
   createdAt: string;
   updatedAt: string;

@@ -29,6 +29,8 @@ export default function InspectionPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
   const [showMetadata, setShowMetadata] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -53,6 +55,24 @@ export default function InspectionPage() {
 
   function handleItemUpdate(updated: CheckItem) {
     setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+  }
+
+  function getDisplayTitle() {
+    if (inspection?.title) return inspection.title;
+    return `Visit ${inspection?.visitNumber || ''}`;
+  }
+
+  function startEditingTitle() {
+    setTitleDraft(getDisplayTitle());
+    setEditingTitle(true);
+  }
+
+  async function saveTitle() {
+    if (!inspection) return;
+    const updated = { ...inspection, title: titleDraft.trim() || undefined, updatedAt: new Date().toISOString() };
+    setInspection(updated);
+    await saveInspection(updated);
+    setEditingTitle(false);
   }
 
   async function handleMetadataChange(field: keyof Inspection, value: string) {
@@ -159,22 +179,53 @@ export default function InspectionPage() {
   return (
     <div className="min-h-screen pb-20">
       <Header
-        title={`Visit ${inspection?.visitNumber || ''}`}
+        title=""
         backHref={`/projects/${projectId}`}
         actions={
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowMetadata(!showMetadata)}
-              className="tap-target text-white/80 hover:text-white text-sm"
-            >
-              ℹ️
-            </button>
-            <button
-              onClick={() => router.push(`/projects/${projectId}/inspect/${visitId}/report`)}
-              className="tap-target bg-orange text-white px-3 py-1.5 rounded text-sm font-medium"
-            >
-              PDF
-            </button>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {editingTitle ? (
+              <div className="flex items-center gap-1 flex-1 min-w-0">
+                <input
+                  type="text"
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditingTitle(false); }}
+                  autoFocus
+                  className="flex-1 min-w-0 px-2 py-1 rounded text-sm text-dark-grey bg-white"
+                  placeholder="Visit name..."
+                />
+                <button onClick={saveTitle} className="tap-target text-white text-sm px-2 py-1 bg-green-500 rounded">
+                  Save
+                </button>
+                <button onClick={() => setEditingTitle(false)} className="tap-target text-white/70 text-sm px-2">
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={startEditingTitle}
+                  className="text-white font-semibold text-sm truncate hover:underline flex items-center gap-1"
+                  title="Tap to rename"
+                >
+                  {getDisplayTitle()} ✏️
+                </button>
+                <div className="flex gap-2 ml-auto flex-shrink-0">
+                  <button
+                    onClick={() => setShowMetadata(!showMetadata)}
+                    className="tap-target text-white/80 hover:text-white text-sm"
+                  >
+                    ℹ️
+                  </button>
+                  <button
+                    onClick={() => router.push(`/projects/${projectId}/inspect/${visitId}/report`)}
+                    className="tap-target bg-orange text-white px-3 py-1.5 rounded text-sm font-medium"
+                  >
+                    PDF
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         }
       />
@@ -183,6 +234,16 @@ export default function InspectionPage() {
       {showMetadata && inspection && (
         <div className="bg-blue-50 border-b border-blue-200 p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="text-xs text-gray-500">Visit Title</label>
+              <input
+                type="text"
+                value={inspection.title || `Visit ${inspection.visitNumber}`}
+                onChange={(e) => handleMetadataChange('title', e.target.value)}
+                className="w-full px-2 py-1.5 border rounded text-sm"
+                placeholder="e.g. 20-22 Mortimer Street"
+              />
+            </div>
             <div>
               <label className="text-xs text-gray-500">Date</label>
               <input
