@@ -82,6 +82,20 @@ export default function InspectionPage() {
     await saveInspection(updated);
   }
 
+  async function handleProjectChange(field: string, value: string) {
+    if (!project) return;
+    const updated = {
+      ...project,
+      config: {
+        ...project.config,
+        metadata: { ...project.config.metadata, [field]: value },
+      },
+      updatedAt: new Date().toISOString(),
+    };
+    setProject(updated);
+    await db.projects.put(updated);
+  }
+
   function toggleSection(key: string) {
     setCollapsedSections((prev) => {
       const next = new Set(prev);
@@ -231,66 +245,158 @@ export default function InspectionPage() {
       />
 
       {/* Metadata panel */}
-      {showMetadata && inspection && (
-        <div className="bg-blue-50 border-b border-blue-200 p-4 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <label className="text-xs text-gray-500">Visit Title</label>
-              <input
-                type="text"
-                value={inspection.title || `Visit ${inspection.visitNumber}`}
-                onChange={(e) => handleMetadataChange('title', e.target.value)}
-                className="w-full px-2 py-1.5 border rounded text-sm"
-                placeholder="e.g. 20-22 Mortimer Street"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">Date</label>
-              <input
-                type="date"
-                value={inspection.date}
-                onChange={(e) => handleMetadataChange('date', e.target.value)}
-                className="w-full px-2 py-1.5 border rounded text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">Next Visit</label>
-              <input
-                type="date"
-                value={inspection.nextVisitDate}
-                onChange={(e) => handleMetadataChange('nextVisitDate', e.target.value)}
-                className="w-full px-2 py-1.5 border rounded text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">Inspector</label>
-              <input
-                type="text"
-                value={inspection.inspectorName}
-                onChange={(e) => handleMetadataChange('inspectorName', e.target.value)}
-                className="w-full px-2 py-1.5 border rounded text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">Site Contact</label>
-              <input
-                type="text"
-                value={inspection.siteContact}
-                onChange={(e) => handleMetadataChange('siteContact', e.target.value)}
-                className="w-full px-2 py-1.5 border rounded text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">Weather</label>
-              <input
-                type="text"
-                value={inspection.weather}
-                onChange={(e) => handleMetadataChange('weather', e.target.value)}
-                className="w-full px-2 py-1.5 border rounded text-sm"
-                placeholder="e.g. Overcast, dry"
-              />
+      {showMetadata && inspection && project && (
+        <div className="bg-blue-50 border-b border-blue-200 p-4 space-y-4">
+          {/* Project Details */}
+          <div>
+            <h3 className="text-xs font-semibold text-navy uppercase tracking-wide mb-2">Project Details</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="text-xs text-gray-500">Project Name</label>
+                <input
+                  type="text"
+                  value={project.config.metadata.name}
+                  onChange={(e) => handleProjectChange('name', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                  placeholder="Project name"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-gray-500">Address</label>
+                <input
+                  type="text"
+                  value={project.config.metadata.address}
+                  onChange={(e) => handleProjectChange('address', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                  placeholder="Site address"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Reference</label>
+                <input
+                  type="text"
+                  value={project.config.metadata.reference}
+                  onChange={(e) => handleProjectChange('reference', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                  placeholder="Project reference"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Company</label>
+                <input
+                  type="text"
+                  value={project.config.metadata.company}
+                  onChange={(e) => handleProjectChange('company', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                  placeholder="e.g. Isles Safety Ltd"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Building Control Body</label>
+                <input
+                  type="text"
+                  value={project.config.metadata.bcBody}
+                  onChange={(e) => handleProjectChange('bcBody', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                  placeholder="e.g. City of Westminster"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">BC Contact</label>
+                <input
+                  type="text"
+                  value={project.config.metadata.bcContact}
+                  onChange={(e) => handleProjectChange('bcContact', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                  placeholder="BC surveyor name"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-gray-500">Principal Designer / Inspector</label>
+                <input
+                  type="text"
+                  value={project.config.metadata.inspector}
+                  onChange={(e) => handleProjectChange('inspector', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                  placeholder="e.g. Javid Ram"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-gray-500">Description</label>
+                <textarea
+                  value={project.config.metadata.description}
+                  onChange={(e) => handleProjectChange('description', e.target.value)}
+                  rows={2}
+                  className="w-full px-2 py-1.5 border rounded text-sm resize-none"
+                  placeholder="Brief description of works..."
+                />
+              </div>
             </div>
           </div>
+
+          {/* Visit Details */}
+          <div>
+            <h3 className="text-xs font-semibold text-navy uppercase tracking-wide mb-2">Visit Details</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="text-xs text-gray-500">Visit Title</label>
+                <input
+                  type="text"
+                  value={inspection.title || `Visit ${inspection.visitNumber}`}
+                  onChange={(e) => handleMetadataChange('title', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                  placeholder="e.g. 20-22 Mortimer Street"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Date</label>
+                <input
+                  type="date"
+                  value={inspection.date}
+                  onChange={(e) => handleMetadataChange('date', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Next Visit</label>
+                <input
+                  type="date"
+                  value={inspection.nextVisitDate}
+                  onChange={(e) => handleMetadataChange('nextVisitDate', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Inspector</label>
+                <input
+                  type="text"
+                  value={inspection.inspectorName}
+                  onChange={(e) => handleMetadataChange('inspectorName', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Site Contact</label>
+                <input
+                  type="text"
+                  value={inspection.siteContact}
+                  onChange={(e) => handleMetadataChange('siteContact', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Weather</label>
+                <input
+                  type="text"
+                  value={inspection.weather}
+                  onChange={(e) => handleMetadataChange('weather', e.target.value)}
+                  className="w-full px-2 py-1.5 border rounded text-sm"
+                  placeholder="e.g. Overcast, dry"
+                />
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="text-xs text-gray-500">General Notes</label>
             <textarea
