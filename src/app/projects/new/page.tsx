@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { saveProject } from '@/lib/db';
-import type { Project, ProjectConfig, TemplateSection, TemplateItem } from '@/types';
+import type { Project, ProjectConfig, RegimeId, TemplateSection, TemplateItem } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+import { DEFAULT_REGIME, REGIME_REGISTRY, resolveRegime } from '@/lib/regimes';
 
 interface UploadedFile {
   file: File;
@@ -34,6 +35,7 @@ export default function NewProjectPage() {
   const [error, setError] = useState('');
   const [checklist, setChecklist] = useState<GeneratedChecklist | null>(null);
   const [usage, setUsage] = useState<{ inputTokens: number; outputTokens: number } | null>(null);
+  const [regime, setRegime] = useState<RegimeId>(DEFAULT_REGIME);
 
   // Load saved API key on mount
   useEffect(() => {
@@ -85,12 +87,13 @@ export default function NewProjectPage() {
       const formData = new FormData();
       formData.append('apiKey', apiKey);
       formData.append('projectBrief', projectBrief);
+      formData.append('regime', regime);
 
       for (const { file } of files) {
         formData.append('files', file);
       }
 
-      setProgress('Analysing documents and generating checklist...');
+      setProgress(`Analysing documents and generating ${resolveRegime(regime).label} checklist...`);
 
       const response = await fetch('/api/generate-checklist', {
         method: 'POST',
@@ -130,6 +133,7 @@ export default function NewProjectPage() {
         company: 'Isles Safety Ltd',
         inspector: '',
       },
+      regime,
       sections: checklist.sections,
       commissioningItems: checklist.commissioningItems || [],
       statutoryDeclarations: checklist.statutoryDeclarations || [],
@@ -180,6 +184,54 @@ export default function NewProjectPage() {
         {/* Step 1: Upload */}
         {step === 'upload' && (
           <div className="space-y-4">
+            {/* Regime slider — CDM vs Building Regs (plug-in registry) */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-dark-grey">Regime</h3>
+                <span className="text-[10px] uppercase tracking-wide text-gray-400">
+                  Plug-in · pairs with Virtual PD
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mb-3">
+                Choose the regulatory regime for this project before uploading drawings. The AI
+                tailors the checklist to the regime you pick. Switchable later from the project page.
+              </p>
+
+              <div
+                role="radiogroup"
+                aria-label="Regime"
+                className="relative grid grid-cols-2 bg-gray-100 rounded-full p-1 select-none"
+              >
+                <span
+                  aria-hidden
+                  className={`absolute top-1 bottom-1 w-[calc(50%-0.25rem)] rounded-full shadow-sm transition-all duration-200 ease-out ${
+                    regime === 'cdm' ? 'bg-orange' : 'bg-navy'
+                  }`}
+                  style={{ left: regime === 'cdm' ? 'calc(50% + 0.125rem)' : '0.25rem' }}
+                />
+                {(['building-regs', 'cdm'] as const).map((id) => {
+                  const r = REGIME_REGISTRY[id];
+                  const active = regime === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setRegime(id)}
+                      className={`relative z-10 tap-target py-2 rounded-full text-sm font-medium transition-colors ${
+                        active ? 'text-white' : 'text-gray-500'
+                      }`}
+                    >
+                      {r.shortLabel}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-xs text-gray-500 mt-3">{resolveRegime(regime).tagline}</p>
+            </div>
+
             {/* API Key */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <h3 className="font-semibold text-dark-grey mb-2">Anthropic API Key</h3>
@@ -302,7 +354,7 @@ export default function NewProjectPage() {
               disabled={generating}
               className="tap-target w-full bg-orange text-white py-4 rounded-lg font-semibold text-lg disabled:opacity-50"
             >
-              Generate Site-Specific Checklist
+              Generate {resolveRegime(regime).shortLabel} Checklist
             </button>
 
             <p className="text-xs text-gray-400 text-center">
@@ -333,6 +385,9 @@ export default function NewProjectPage() {
                 <p className="text-sm text-gray-600 mb-3">{checklist.projectSummary}</p>
               )}
               <div className="flex flex-wrap gap-3 text-sm">
+                <span className={`px-2 py-1 rounded ${resolveRegime(regime).badgeClass}`}>
+                  {resolveRegime(regime).label}
+                </span>
                 <span className="bg-navy/10 text-navy px-2 py-1 rounded">
                   {checklist.sections.length} sections
                 </span>

@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { db, saveInspection, saveCheckItem } from '@/lib/db';
 import type { Project, Inspection, CheckItem } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+import { resolveRegime } from '@/lib/regimes';
 
 export default function ProjectDetailPage() {
   const router = useRouter();
@@ -138,7 +139,17 @@ export default function ProjectDetailPage() {
       <main className="p-4 max-w-2xl mx-auto">
         {/* Project info card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-          <p className="text-sm text-gray-500">{meta.address}</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-sm text-gray-500 flex-1 min-w-0">{meta.address}</p>
+            <span
+              className={`text-[11px] font-medium px-2 py-1 rounded whitespace-nowrap ${
+                resolveRegime(project.config.regime).badgeClass
+              }`}
+              title={resolveRegime(project.config.regime).tagline}
+            >
+              {resolveRegime(project.config.regime).shortLabel}
+            </span>
+          </div>
           {meta.reference && (
             <p className="text-xs text-gray-400 mt-1">Ref: {meta.reference}</p>
           )}

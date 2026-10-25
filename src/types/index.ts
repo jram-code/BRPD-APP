@@ -1,5 +1,7 @@
 export type CheckStatus = 'outstanding' | 'pass' | 'fail' | 'na';
 
+export type RegimeId = 'building-regs' | 'cdm';
+
 export interface TemplateItem {
   ref: string;
   text: string;
@@ -14,6 +16,7 @@ export interface TemplateSection {
 
 export interface ProjectConfig {
   metadata: ProjectMetadata;
+  regime?: RegimeId;
   sections: TemplateSection[];
   commissioningItems: TemplateItem[];
   statutoryDeclarations: TemplateItem[];

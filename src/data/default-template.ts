@@ -358,6 +358,7 @@ export const defaultTemplate: ProjectConfig = {
     company: 'Isles Safety Ltd',
     inspector: '',
   },
+  regime: 'building-regs',
   sections: allSections,
   commissioningItems: commissioning,
   statutoryDeclarations,
