@@ -5,14 +5,17 @@ import { resolveRegime } from '@/lib/regimes';
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const apiKey = formData.get('apiKey') as string;
     const projectBrief = formData.get('projectBrief') as string;
     const regimeId = formData.get('regime') as string | null;
     const regime = resolveRegime(regimeId);
     const files = formData.getAll('files') as File[];
 
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'API key is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Server is missing ANTHROPIC_API_KEY. Set it on the Vercel project.' },
+        { status: 500 }
+      );
     }
 
     const client = new Anthropic({ apiKey });

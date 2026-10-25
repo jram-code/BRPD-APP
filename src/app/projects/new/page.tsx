@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { saveProject } from '@/lib/db';
@@ -28,23 +28,12 @@ export default function NewProjectPage() {
   const [step, setStep] = useState<'upload' | 'generating' | 'review'>('upload');
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [projectBrief, setProjectBrief] = useState('');
-  const [apiKey, setApiKey] = useState('');
-  const [apiKeySaved, setApiKeySaved] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
   const [checklist, setChecklist] = useState<GeneratedChecklist | null>(null);
   const [usage, setUsage] = useState<{ inputTokens: number; outputTokens: number } | null>(null);
   const [regime, setRegime] = useState<RegimeId>(DEFAULT_REGIME);
-
-  // Load saved API key on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('anthropic_api_key');
-    if (saved) {
-      setApiKey(saved);
-      setApiKeySaved(true);
-    }
-  }, []);
 
   function handleFileAdd(e: React.ChangeEvent<HTMLInputElement>) {
     const newFiles = e.target.files;
@@ -63,16 +52,7 @@ export default function NewProjectPage() {
     setFiles((prev) => prev.filter((f) => f.id !== id));
   }
 
-  function saveApiKey() {
-    localStorage.setItem('anthropic_api_key', apiKey);
-    setApiKeySaved(true);
-  }
-
   async function handleGenerate() {
-    if (!apiKey) {
-      setError('Please enter your Anthropic API key');
-      return;
-    }
     if (files.length === 0 && !projectBrief.trim()) {
       setError('Please upload documents or describe the project');
       return;
@@ -85,7 +65,6 @@ export default function NewProjectPage() {
 
     try {
       const formData = new FormData();
-      formData.append('apiKey', apiKey);
       formData.append('projectBrief', projectBrief);
       formData.append('regime', regime);
 
@@ -230,36 +209,6 @@ export default function NewProjectPage() {
               </div>
 
               <p className="text-xs text-gray-500 mt-3">{resolveRegime(regime).tagline}</p>
-            </div>
-
-            {/* API Key */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <h3 className="font-semibold text-dark-grey mb-2">Anthropic API Key</h3>
-              <p className="text-xs text-gray-500 mb-3">
-                Your key is stored locally in your browser and sent directly to Anthropic. Never stored on our servers.
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => {
-                    setApiKey(e.target.value);
-                    setApiKeySaved(false);
-                  }}
-                  placeholder="sk-ant-..."
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-orange"
-                />
-                <button
-                  onClick={saveApiKey}
-                  className={`tap-target px-3 py-2 rounded-lg text-sm font-medium ${
-                    apiKeySaved
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-navy text-white'
-                  }`}
-                >
-                  {apiKeySaved ? 'Saved' : 'Save'}
-                </button>
-              </div>
             </div>
 
             {/* Project Brief */}
